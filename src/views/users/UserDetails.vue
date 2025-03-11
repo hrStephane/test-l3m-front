@@ -1,12 +1,11 @@
-
-
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useUsersStore } from '../../stores/users'
 import TransactionList from '../transactions/TransactionList.vue'
 
 const route = useRoute()
+const router = useRouter()
 const usersStore = useUsersStore()
 
 interface User {
@@ -16,10 +15,10 @@ interface User {
   transactions?: any;
 }
 
-
 const user = ref<User | null>(null);
+const errorMessage = ref<string | null>(null);
 
-const id = parseInt(route.params.id as string) 
+const id = parseInt(route.params.id as string)
 
 onMounted(async () => {
   const user_response = await usersStore.getUser(id)
@@ -31,20 +30,28 @@ onMounted(async () => {
 })
 
 const fetchUserTransactions = async (page = 1, perPage = 10) => {
-
-  console.log("perPage",perPage);
-
-  const response = await usersStore.getUser(id, page , perPage);
-
-
+  console.log("perPage", perPage);
+  const response = await usersStore.getUser(id, page, perPage);
   return response.transactions;
-};
+}
 
+const deleteUser = async () => {
+  try {
+    await usersStore.deleteUser(id);
+    router.push({ name: 'users' });
+  } catch (error) {
+    errorMessage.value = "Failed to delete user. Please try again.";
+  }
+};
 </script>
 
 <template>
   <div v-if="user">
-    <h3 class="text-xl font-semibold">User Information</h3>
+    <div v-if="errorMessage" class="bg-red-500 text-white p-3 rounded-md mb-4">
+      {{ errorMessage }}
+    </div>
+
+    <h3 class="text-lg font-medium">User Information</h3>
     <div class="shadow rounded-lg p-4 bg-white flex-1">
       <dl>
         <div class="px-4 py-5">
@@ -57,8 +64,10 @@ const fetchUserTransactions = async (page = 1, perPage = 10) => {
         </div>
       </dl>
     </div>
+
     <div class="px-4 py-3 text-right">
-      <router-link :to="{ name: 'user-edit', params: { id: user.id }}" class="text-indigo-600 hover:text-indigo-900">Edit</router-link>
+      <router-link :to="{ name: 'user-edit', params: { id: user.id }}" class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</router-link>
+      <button @click="deleteUser" class="text-red-600 hover:text-red-800">Delete</button>
     </div>
 
     <div>
@@ -67,9 +76,5 @@ const fetchUserTransactions = async (page = 1, perPage = 10) => {
         :fetchTransactions="fetchUserTransactions">
       </TransactionList>
     </div>
-
   </div>
-
-
-
 </template>
