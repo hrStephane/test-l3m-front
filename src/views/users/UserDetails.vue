@@ -40,7 +40,7 @@ const deleteUser = async () => {
     await usersStore.deleteUser(id);
     router.push({ name: 'users' });
   } catch (error) {
-    errorMessage.value = "Failed to delete user. Please try again.";
+    errorMessage.value = "Failed to delete user.";
   }
 };
 </script>
